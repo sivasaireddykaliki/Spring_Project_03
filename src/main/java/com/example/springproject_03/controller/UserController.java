@@ -2,8 +2,10 @@ package com.example.springproject_03.controller;
 
 import com.example.springproject_03.entity.Address;
 import com.example.springproject_03.entity.User;
+import com.example.springproject_03.service.UserService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,18 +24,20 @@ public class UserController {
 
     Logger logger = LogManager.getLogger(UserController.class);
 
+    @Autowired
+    private UserService userService;
+
+    private RestTemplate restTemplate = new RestTemplate();
+
+
+
     // Single user
     @RequestMapping("/user/{id}")
     public ResponseEntity<User> getUser(@PathVariable("id") int id)
     {
         logger.info("Single User");
         try {
-            String uri= "https://jsonplaceholder.typicode.com/users/"+id;
-            RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<User> userValue = restTemplate.getForEntity(uri,User.class);
-            User user=userValue.getBody();
-            logger.info(user);
-            return new ResponseEntity<>(user, HttpStatus.OK);
+            return userService.getUser(id);
         }
         catch (RestClientException e) {
             throw new RuntimeException(e);
@@ -46,7 +50,7 @@ public class UserController {
     {
 
         String uri= "https://jsonplaceholder.typicode.com/users/"+id;
-        RestTemplate restTemplate = new RestTemplate();
+        //RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<User> userValue = restTemplate.getForEntity(uri,User.class);
         User user=userValue.getBody();
         Address address = user.getAddress();
@@ -58,11 +62,8 @@ public class UserController {
     public ResponseEntity<List<User>> getUsers()
     {
         try {
-            String uri = "https://jsonplaceholder.typicode.com/users/";
-            RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<User[]> userValues=restTemplate.getForEntity(uri,User[].class);
-            List<User> users = Arrays.asList(userValues.getBody());
-            return new ResponseEntity<>(users, HttpStatus.OK);
+            return userService.getUsers();
+
         } catch (RestClientException e) {
             throw new RuntimeException(e);
         }
@@ -73,7 +74,7 @@ public class UserController {
     public ResponseEntity<List<Address>> getAddresses()
     {
         String uri = "https://jsonplaceholder.typicode.com/users/";
-        RestTemplate restTemplate = new RestTemplate();
+        //RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<User[]> userValues=restTemplate.getForEntity(uri,User[].class);
         List<User> users=Arrays.asList(userValues.getBody());
         List<Address> addresses = users.stream().map(User::getAddress)
